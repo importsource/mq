@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property>
+        <name>scope</name>
+        <value>com.importsource.mq.logic</value>
+    </property>
+    <property>
+        <name></name>
+        <value>1000</value>
+    </property>
+</configuration>
