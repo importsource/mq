@@ -28,3 +28,30 @@ public class DBAccessThread extends AbstractThread {
 }
 
 ```
+
+### 然后实现生产者逻辑：
+```java
+/**
+ * 消息输送前端。客户端请求发送的api实现
+ * @author Hezf
+ *
+ */
+public class TestDriver {
+	public static void main(String[] args) {
+		//线程池管理者。然后加入消息
+		ThreadPoolManager tpm = ThreadPoolManager.newInstance("com.importsource.mq.DBAccessThread");
+		for (int i = 0; i < 5000; i++) {
+			tpm.addMsg(String.valueOf(i));
+		}
+	}
+}
+```
+
+###maven
+```xml
+<dependency>
+    <groupId>com.importsource.mq</groupId>
+    <artifactId>importsource-mq</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+</dependency>
+```
