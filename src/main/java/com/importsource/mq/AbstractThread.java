@@ -1,5 +1,10 @@
 package com.importsource.mq;
 
+/**
+ * 实现一个通用抽象线程
+ * @author Hezf
+ *
+ */
 public abstract class AbstractThread implements Runnable {
 	protected String msg;
 
@@ -27,4 +32,3 @@ public abstract class AbstractThread implements Runnable {
 
 	public abstract void doIt() ;
 }
-
