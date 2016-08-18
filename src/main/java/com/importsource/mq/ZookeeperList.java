@@ -31,9 +31,9 @@ public class ZookeeperList<E> implements Queue<E>, Watcher {
 	public ZookeeperList(String config) {
 		connect(config);
 	}
-	
-	public ZookeeperList(String config,String root) {
-		this.root=root;
+
+	public ZookeeperList(String config, String root) {
+		this.root = root;
 		connect(config);
 	}
 
@@ -56,18 +56,36 @@ public class ZookeeperList<E> implements Queue<E>, Watcher {
 	}
 
 	public int size() {
-		// TODO Auto-generated method stub
+		try {
+			return zk.getChildren(root, this).size();
+		} catch (KeeperException e) {
+			exception.add(e);
+		} catch (InterruptedException e) {
+			exception.add(e);
+		}
 		return 0;
 	}
 
 	public boolean isEmpty() {
-
-		// TODO Auto-generated method stub
-		return false;
+		try {
+			return zk.getChildren(root, this).size() == 0;
+		} catch (KeeperException e) {
+			exception.add(e);
+		} catch (InterruptedException e) {
+			exception.add(e);
+		}
+		return true;
 	}
 
 	public boolean contains(Object o) {
-		// TODO Auto-generated method stub
+		try {
+			Stat stat = zk.exists(root + o.toString(), this);
+			return stat != null;
+		} catch (KeeperException e) {
+			exception.add(e);
+		} catch (InterruptedException e) {
+			exception.add(e);
+		}
 		return false;
 	}
 
@@ -77,7 +95,16 @@ public class ZookeeperList<E> implements Queue<E>, Watcher {
 	}
 
 	public Object[] toArray() {
-		// TODO Auto-generated method stub
+		try {
+			List<String> children=zk.getChildren(root, this);
+			if(children!=null){
+				return children.toArray();
+			}
+		} catch (KeeperException e) {
+			exception.add(e);
+		} catch (InterruptedException e) {
+			exception.add(e);
+		}
 		return null;
 	}
 
@@ -87,49 +114,108 @@ public class ZookeeperList<E> implements Queue<E>, Watcher {
 	}
 
 	public boolean remove(Object o) {
-		// TODO Auto-generated method stub
+		try {
+			zk.delete(root + o.toString(), -1);
+			return true;
+		} catch (InterruptedException e) {
+			exception.add(e);
+		} catch (KeeperException e) {
+			exception.add(e);
+		}
 		return false;
 	}
 
 	public boolean containsAll(Collection<?> c) {
-		// TODO Auto-generated method stub
+		try {
+			for (Iterator<?> iterator = c.iterator(); iterator.hasNext();) {
+				Object o = (Object) iterator.next();
+				boolean contains=contains(o);
+				if(!contains){
+					return false;
+				}
+
+			}
+			return true;
+		} catch (Exception e) {
+			exception.add(e);
+		}
 		return false;
 	}
 
 	public boolean addAll(Collection<? extends E> c) {
-		// TODO Auto-generated method stub
+		try {
+			for (Iterator<?> iterator = c.iterator(); iterator.hasNext();) {
+				E o = (E) iterator.next();
+				this.add(o);
+			}
+			return true;
+		} catch (Exception e) {
+			exception.add(e);
+		}
 		return false;
 	}
 
 	public boolean removeAll(Collection<?> c) {
-		// TODO Auto-generated method stub
+		try {
+			 Iterator<?> listIterator = c.iterator();
+			 while(listIterator.hasNext()){
+				Object obj= listIterator.next();
+				remove(obj);
+			 }
+			 return true;
+		} catch (Exception e) {
+			exception.add(e);
+		}
 		return false;
 	}
 
 	public boolean retainAll(Collection<?> c) {
-		// TODO Auto-generated method stub
+		List<String> children;
+		try {
+			children = zk.getChildren(root, this);
+			for (int i = 0; i < children.size(); i++) {
+				String child=children.get(i);
+				if(!c.contains(child)){
+					remove(child);
+					i--;
+				}
+			}
+			return true;
+		} catch (KeeperException e) {
+			exception.add(e);
+		} catch (InterruptedException e) {
+			exception.add(e);
+		}
+		
 		return false;
 	}
 
 	public void clear() {
-		// TODO Auto-generated method stub
-
+		List<String> children = new ArrayList<String>();
+		try {
+			children = zk.getChildren(root, this);
+		} catch (KeeperException e) {
+			exception.add(e);
+		} catch (InterruptedException e) {
+			exception.add(e);
+		}
+		for (int i = 0; i < children.size(); i++) {
+			remove(children.get(i));
+			i--;
+		}
 	}
 
 	public boolean add(E e) {
-		// TODO Auto-generated method stub
-		return false;
+		return offer(e);
 	}
 
 	public boolean offer(E e) {
 		try {
 			return offer1(e.toString().getBytes());
 		} catch (KeeperException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			exception.add(e1);
 		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			exception.add(e1);
 		}
 		return false;
 	}
@@ -173,46 +259,26 @@ public class ZookeeperList<E> implements Queue<E>, Watcher {
 	}
 
 	private byte[] poll1() throws KeeperException, InterruptedException {
-
 		int retvalue = -1;
-
 		Stat stat = null;
-
 		while (true) {
-
 			synchronized (mutex) {
-
 				List<String> list = zk.getChildren(root, true);
-
 				if (list.size() == 0) {
-
 					mutex.wait();
-
 				} else {
-
 					Integer min = new Integer(list.get(0).substring(7));
-
 					for (String s : list) {
-
 						Integer tempValue = new Integer(s.substring(7));
-
 						if (tempValue < min)
 							min = tempValue;
-
 					}
-
 					byte[] b = zk.getData(root + "/element" + min, false, stat);
-
 					zk.delete(root + "/element" + min, 0);
-
 					return b;
-
 				}
-
 			}
-
 		}
-
 	}
 
 }

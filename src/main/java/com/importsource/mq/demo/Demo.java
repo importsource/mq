@@ -19,7 +19,7 @@ public class Demo {
 		//线程池管理者。然后加入消息
 		Producer tpm = DefaultThreadPoolManager.newInstance("com.importsource.mq.DBAccessThread",new ZookeeperList("127.0.0.1:2181","/default2"));
 		long start=System.currentTimeMillis();
-		for (int i = 0; i < 1050; i++) {
+		for (int i = 0; i < 2051; i++) {
 			tpm.addMsg(String.valueOf(i));
 		}
 		long end=System.currentTimeMillis();
